@@ -358,8 +358,6 @@ class sale_post_view(ListView):
 
 
 
-def hello(request):
-    return HttpResponse("Hello Worlld ")
 
 
 def order_get(request):
