@@ -105,6 +105,13 @@ class product_post_view(ListView):
         context = super().get_context_data(**kwargs)
         context['categories'] = Category.objects.all()
         context['units'] = Unit.objects.all()
+        
+        # Add stats
+        products = Product.objects.all()
+        context['total_products'] = products.count()
+        context['low_stock_count'] = products.filter(stock__lt=10).count()
+        context['active_products'] = products.filter(is_active=True).count()
+        context['total_value'] = sum([p.stock * p.selling_price for p in products])
         return context
 
     def post(self, request, *args, **kwargs):
@@ -137,6 +144,8 @@ class product_post_view(ListView):
                 messages.success(request,f"Product '{product_name}' deleted successfully!")
             except Product.DoesNotExist:
                 messages.error(request,"Product not found!")
+            except models.ProtectedError:
+                messages.error(request, f"Cannot delete product '{product_name}' because it is referenced in potential Sales or Purchases.")
             except Exception as e:
                 messages.error(request,f"Error deleting product: {e}")
         else:
@@ -371,6 +380,9 @@ class sale_post_view(ListView):
         context = super().get_context_data(**kwargs)
         from .forms import SaleForm
         context['form'] = SaleForm()
+        context['customers'] = Customer.objects.all()
+        # Pass all active products to the template for the custom dropdown
+        context['products'] = Product.objects.filter(is_active=True)
         return context
         
     def post(self, request, *args, **kwargs):
