@@ -1,0 +1,96 @@
+{% load static %}
+<aside id="sidebar" class="sidebar" role="navigation" aria-label="Main sidebar">
+  <div class="brand">
+    <img src="{% static 'img/logo.png' %}" alt="logo" onerror="this.style.display='none'">
+    <div>
+      <div class="brand-text">Inventory</div>
+      <div style="font-size:.78rem; color:rgba(255,255,255,0.6)">Admin Panel</div>
+    </div>
+  </div>
+
+  <div class="px-2 mb-2">
+    {% if request.user.is_authenticated %}
+    <div class="d-flex align-items-center gap-2 px-2 py-2" style="color:rgba(255,255,255,0.9)">
+      <div
+        style="width:38px; height:38px; border-radius:8px; overflow:hidden; background:#fff; display:flex; align-items:center; justify-content:center;">
+        <i class="bi bi-person-fill" style="color:#212529"></i>
+      </div>
+      <div>
+        <div style="font-weight:600;">
+          {{ request.user.get_full_name|default:request.user.username }}
+        </div>
+        <div style="font-size:.78rem; color:rgba(255,255,255,.65)">{{ request.user.email }}</div>
+      </div>
+    </div>
+    {% else %}
+    <div class="px-2 py-2">
+      <a href="{% url 'login' %}" class="btn btn-sm btn-primary w-100">Sign in</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <nav class="nav flex-column mt-2" id="sidebarNav">
+    <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+      href="{% url 'dashboard' %}">
+      <i class="bi bi-speedometer2"></i>
+      <span class="nav-text">Dashboard</span>
+    </a>
+
+    <a class="nav-link {% if request.resolver_match.url_name == 'vendor' %}active{% endif %}" href="{% url 'vendor' %}">
+      <i class="bi bi-people"></i>
+      <span class="nav-text">Vendors</span>
+    </a>
+
+    <a class="nav-link {% if request.resolver_match.url_name == 'product' %}active{% endif %}"
+      href="{% url 'product' %}">
+      <i class="bi bi-box-seam"></i>
+      <span class="nav-text">Products</span>
+    </a>
+
+    <a class="nav-link {% if request.resolver_match.url_name == 'purchase' %}active{% endif %}"
+      href="{% url 'purchase' %}">
+      <i class="bi bi-basket"></i>
+      <span class="nav-text">Purchases</span>
+    </a>
+
+    <a class="nav-link {% if request.resolver_match.url_name == 'sale' %}active{% endif %}" href="{% url 'sale' %}  ">
+      <i class="bi bi-currency-exchange"></i>
+      <span class="nav-text">Sales</span>
+    </a>
+
+    <a class="nav-link {% if request.resolver_match.url_name == 'customer' %}active{% endif %}"
+      href="{% url 'customer' %}">
+      <i class="bi bi-person-badge"></i>
+      <span class="nav-text">Customers</span>
+    </a>
+
+    <a class="nav-link {% if request.resolver_match.url_name == 'category' %}active{% endif %}"
+      href="{% url 'category' %}">
+      <i class="bi bi-tags"></i>
+      <span class="nav-text">Category</span>
+    </a>
+
+    <a class="nav-link {% if request.resolver_match.url_name == 'unit' %}active{% endif %}" href="{% url 'unit' %}">
+      <i class="bi bi-rulers"></i>
+      <span class="nav-text">Unit</span>
+    </a>
+
+    <a class="nav-link">
+      <i class="bi bi-file-earmark-text"></i>
+      <span class="nav-text">Reports</span>
+    </a>
+
+    {% if request.user.is_authenticated %}
+    <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">{% csrf_token %}</form>
+    <a class="nav-link mt-2" href="#"
+      onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+      <i class="bi bi-box-arrow-right"></i>
+      <span class="nav-text">Logout</span>
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="mt-auto p-3">
+    <small style="color:rgba(255,255,255,0.55)">v1.0 • {% now "Y" %}</small>
+  </div>
+</aside>

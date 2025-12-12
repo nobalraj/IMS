@@ -1,0 +1,603 @@
+{% extends 'base/base.html' %}
+
+{% load static %}
+
+{% block maincontent %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Vendor Management</h2>
+            <p class="text-muted mb-0">Manage your supplier relationships</p>
+        </div>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal"
+            data-bs-target="#addVendorModal">
+            <i class="bi bi-plus-lg"></i>
+            Add Vendor
+        </button>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1 small text-uppercase fw-semibold">Total Vendors</p>
+                        <h3 class="fw-bold mb-0">{{ object_list.count }}</h3>
+                    </div>
+                    <div class="stats-icon bg-primary bg-opacity-10">
+                        <i class="bi bi-people text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1 small text-uppercase fw-semibold">Active Vendors</p>
+                        <h3 class="fw-bold mb-0 text-success">{{ object_list.count }}</h3>
+                    </div>
+                    <div class="stats-icon bg-success bg-opacity-10">
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1 small text-uppercase fw-semibold">This Month</p>
+                        <h3 class="fw-bold mb-0 text-info">0</h3>
+                    </div>
+                    <div class="stats-icon bg-info bg-opacity-10">
+                        <i class="bi bi-calendar-check text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1 small text-uppercase fw-semibold">Top Supplier</p>
+                        <h3 class="fw-bold mb-0" style="font-size: 1rem;">
+                            {% if object_list.first %}{{ object_list.first.name|truncatewords:2 }}{% else %}-{% endif %}
+                        </h3>
+                    </div>
+                    <div class="stats-icon bg-warning bg-opacity-10">
+                        <i class="bi bi-trophy text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="GET" action="{% url 'vendor' %}">
+                <div class="input-group search-box">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="search_query" id="vendorSearchInput"
+                        class="form-control border-start-0 ps-0" placeholder="Search vendors by name, email, phone..."
+                        value="{{ request.GET.search_query }}" autocomplete="off">
+                    <button type="submit" hidden></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Vendor Table List -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle vendor-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Vendor</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Vendor ID</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vendor in object_list %}
+                    <tr class="vendor-row">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="vendor-avatar-small">
+                                    <span>{{ vendor.name|slice:":1"|upper }}</span>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ vendor.name }}</div>
+                                    {% if vendor.other_details %}
+                                    <small class="text-muted">{{ vendor.other_details|truncatewords:5 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-envelope text-muted"></i>
+                                <span>{{ vendor.email|default:"—" }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-telephone text-muted"></i>
+                                <span>{{ vendor.phone|default:"—" }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-geo-alt text-muted"></i>
+                                <span>{{ vendor.address|default:"—"|truncatewords:8 }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">{{ vendor.vendor_id|default:"—" }}</span>
+                        </td>
+                        <td>
+                            {% if vendor.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button class="btn btn-sm btn-light text-primary edit-vendor-btn" title="Edit"
+                                    data-bs-toggle="modal" data-bs-target="#editVendorModal"
+                                    data-vendor-id="{{ vendor.id }}" data-vendor-name="{{ vendor.name }}"
+                                    data-vendor-email="{{ vendor.email }}" data-vendor-phone="{{ vendor.phone }}"
+                                    data-vendor-address="{{ vendor.address }}"
+                                    data-vendor-details="{{ vendor.other_details }}"
+                                    data-vendor-code="{{ vendor.vendor_id }}"
+                                    data-vendor-active="{{ vendor.is_active }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-light text-danger delete-vendor-btn" title="Delete"
+                                    data-bs-toggle="modal" data-bs-target="#deleteVendorModal"
+                                    data-vendor-id="{{ vendor.id }}" data-vendor-name="{{ vendor.name }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="empty-state-inline">
+                                <i class="bi bi-people text-muted display-4"></i>
+                                <p class="mt-3 text-muted mb-3">No vendors found</p>
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#addVendorModal">
+                                    <i class="bi bi-plus-lg me-2"></i>Add Your First Vendor
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Search Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('vendorSearchInput');
+        const vendorRows = document.querySelectorAll('.vendor-row');
+
+        if (searchInput && vendorRows.length > 0) {
+            searchInput.addEventListener('keyup', function () {
+                const query = this.value.toLowerCase();
+
+                vendorRows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    if (text.includes(query)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+
+<!-- Edit and Delete Handlers -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Edit vendor modal handler
+        const editButtons = document.querySelectorAll('.edit-vendor-btn');
+        console.log('Found', editButtons.length, 'edit buttons');
+
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                console.log('Edit button clicked!');
+                const vendorId = this.dataset.vendorId;
+                const vendorName = this.dataset.vendorName;
+                const vendorEmail = this.dataset.vendorEmail;
+                const vendorPhone = this.dataset.vendorPhone;
+                const vendorAddress = this.dataset.vendorAddress;
+                const vendorDetails = this.dataset.vendorDetails;
+                const vendorCode = this.dataset.vendorCode;
+                const vendorActive = this.dataset.vendorActive === 'True';
+
+                console.log('Vendor data:', { vendorId, vendorName, vendorEmail, vendorPhone, vendorActive });
+
+                document.getElementById('editVendorId').value = vendorId;
+                document.getElementById('editVendorName').value = vendorName;
+                document.getElementById('editVendorEmail').value = vendorEmail || '';
+                document.getElementById('editVendorPhone').value = vendorPhone || '';
+                document.getElementById('editVendorAddress').value = vendorAddress || '';
+                document.getElementById('editVendorDetails').value = vendorDetails || '';
+                document.getElementById('editVendorCode').value = vendorCode || '';
+                document.getElementById('editVendorActive').checked = vendorActive;
+                console.log('Form populated successfully');
+            });
+        });
+
+        // Delete vendor modal handler
+        const deleteButtons = document.querySelectorAll('.delete-vendor-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const vendorId = this.dataset.vendorId;
+                const vendorName = this.dataset.vendorName;
+
+                document.getElementById('deleteVendorId').value = vendorId;
+                document.getElementById('deleteVendorName').textContent = vendorName;
+            });
+        });
+    });
+</script>
+
+<!-- Add Vendor Modal -->
+<div class="modal fade" id="addVendorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold">Add New Vendor</h5>
+                    <p class="text-muted small mb-0">Create a new supplier profile</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{% url 'vendor' %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">
+                                <i class="bi bi-person me-1"></i>Vendor Name *
+                            </label>
+                            <input type="text" name="name" class="form-control form-control-lg"
+                                placeholder="e.g., ABC Suppliers" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">
+                                <i class="bi bi-envelope me-1"></i>Email
+                            </label>
+                            <input type="email" name="email" class="form-control form-control-lg"
+                                placeholder="vendor@example.com">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">
+                                <i class="bi bi-telephone me-1"></i>Phone
+                            </label>
+                            <input type="tel" name="phone" class="form-control form-control-lg"
+                                placeholder="+1 234 567 8900">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">
+                                <i class="bi bi-hash me-1"></i>Vendor ID
+                            </label>
+                            <input type="text" name="vendor_id" class="form-control form-control-lg"
+                                placeholder="Auto-generated"
+                                value="VEN{{ object_list.count|add:1|stringformat:'03d' }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">
+                            <i class="bi bi-geo-alt me-1"></i>Address
+                        </label>
+                        <input type="text" name="address" class="form-control form-control-lg"
+                            placeholder="123 Main Street, City, State">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">
+                            <i class="bi bi-file-text me-1"></i>Other Details
+                        </label>
+                        <textarea name="other_details" class="form-control" rows="3"
+                            placeholder="Additional notes about this vendor..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="vendorActive" checked>
+                            <label class="form-check-label fw-semibold" for="vendorActive">
+                                <i class="bi bi-check-circle me-1"></i>Active Status
+                            </label>
+                            <small class="d-block text-muted">Uncheck to mark vendor as inactive</small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-2"></i>Create Vendor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Vendor Modal -->
+<div class="modal fade" id="editVendorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold">Edit Vendor</h5>
+                    <p class="text-muted small mb-0">Update vendor information</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{% url 'vendor' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" id="editVendorId" name="vendor_id">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">
+                                <i class="bi bi-person me-1"></i>Vendor Name *
+                            </label>
+                            <input type="text" id="editVendorName" name="name" class="form-control form-control-lg"
+                                placeholder="e.g., ABC Suppliers" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">
+                                <i class="bi bi-envelope me-1"></i>Email
+                            </label>
+                            <input type="email" id="editVendorEmail" name="email" class="form-control form-control-lg"
+                                placeholder="vendor@example.com">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">
+                                <i class="bi bi-telephone me-1"></i>Phone
+                            </label>
+                            <input type="tel" id="editVendorPhone" name="phone" class="form-control form-control-lg"
+                                placeholder="+1 234 567 8900">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">
+                                <i class="bi bi-hash me-1"></i>Vendor ID
+                            </label>
+                            <input type="text" id="editVendorCode" name="vendor_code"
+                                class="form-control form-control-lg" placeholder="VEN001" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">
+                            <i class="bi bi-geo-alt me-1"></i>Address
+                        </label>
+                        <input type="text" id="editVendorAddress" name="address" class="form-control form-control-lg"
+                            placeholder="123 Main Street, City, State">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">
+                            <i class="bi bi-file-text me-1"></i>Other Details
+                        </label>
+                        <textarea id="editVendorDetails" name="other_details" class="form-control" rows="3"
+                            placeholder="Additional notes about this vendor..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="editVendorActive">
+                            <label class="form-check-label fw-semibold" for="editVendorActive">
+                                <i class="bi bi-check-circle me-1"></i>Active Status
+                            </label>
+                            <small class="d-block text-muted">Uncheck to mark vendor as inactive</small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-2"></i>Update Vendor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Vendor Modal -->
+<div class="modal fade" id="deleteVendorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">Delete Vendor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-exclamation-triangle-fill text-warning display-4"></i>
+                    <p class="mt-3 mb-0">Are you sure you want to delete the vendor:</p>
+                    <p class="fw-bold fs-5" id="deleteVendorName"></p>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                </div>
+                <form method="POST" action="{% url 'vendor' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" id="deleteVendorId" name="vendor_id">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-secondary flex-fill"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger flex-fill">
+                            <i class="bi bi-trash me-2"></i>Delete Vendor
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .stats-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        height: 100%;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .stats-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+    }
+
+    .search-box {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .search-box .input-group-text,
+    .search-box .form-control {
+        border: none;
+        background: transparent;
+    }
+
+    .search-box .form-control:focus {
+        box-shadow: none;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .vendor-table thead th {
+        border-bottom: 2px solid #e2e8f0;
+        color: #4a5568;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        background-color: #f8f9fa !important;
+    }
+
+    .vendor-table tbody td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .vendor-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .vendor-table tbody tr:hover {
+        background-color: #f8fafc;
+        transition: background-color 0.2s ease;
+    }
+
+    .vendor-avatar-small {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .vendor-avatar-small span {
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+
+    .empty-state-inline {
+        padding: 2rem;
+    }
+
+    .modal-content {
+        border-radius: 16px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 0.65rem 0.9rem;
+    }
+
+    .form-control-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .table-card {
+            padding: 1rem;
+        }
+
+        .vendor-table thead th {
+            font-size: 0.7rem;
+            padding: 0.75rem 0.5rem;
+        }
+
+        .vendor-table tbody td {
+            padding: 1rem 0.5rem;
+        }
+
+        .stats-card h3 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock maincontent %}

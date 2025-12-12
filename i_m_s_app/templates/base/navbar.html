@@ -1,0 +1,23 @@
+{% load static %}
+<header class="topbar">
+  <div class="d-flex align-items-center gap-3">
+    <button id="sidebarToggle" class="toggle-btn" aria-label="Toggle sidebar">
+      <i class="bi bi-list" style="font-size: 1.5rem;"></i>
+    </button>
+
+  </div>
+
+  <div class="user-badge">
+    {% if request.user.is_authenticated %}
+    <div class="user-info d-none d-md-flex text-end">
+      <span class="user-name">{{ request.user.get_full_name|default:request.user.username }}</span>
+      <span class="user-role">Admin</span>
+    </div>
+
+    <img src="{% static 'img/avatar.png' %}" alt="Profile" class="user-avatar"
+      onerror="this.src='https://ui-avatars.com/api/?name={{ request.user.username }}&background=random'">
+    {% else %}
+    <a class="btn btn-primary btn-sm rounded-pill px-4" href="">Login</a>
+    {% endif %}
+  </div>
+</header>

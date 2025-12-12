@@ -1,0 +1,464 @@
+{% extends 'base/base.html' %}
+
+{% block maincontent %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-dark">Unit Management</h2>
+            <p class="text-muted mb-0">Manage measurement units for your products</p>
+        </div>
+        <button type="button" class="btn btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal"
+            data-bs-target="#addUnitModal">
+            <i class="bi bi-plus-lg"></i>
+            Add Unit
+        </button>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1 small text-uppercase fw-semibold">Total Units</p>
+                        <h3 class="fw-bold mb-0">{{ object_list.count }}</h3>
+                    </div>
+                    <div class="stats-icon bg-primary bg-opacity-10">
+                        <i class="bi bi-rulers text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1 small text-uppercase fw-semibold">Active Units</p>
+                        <h3 class="fw-bold mb-0 text-success">{{ object_list.count }}</h3>
+                    </div>
+                    <div class="stats-icon bg-success bg-opacity-10">
+                        <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 col-sm-6 mb-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="text-muted mb-1 small text-uppercase fw-semibold">Most Used</p>
+                        <h3 class="fw-bold mb-0 text-info" style="font-size: 1rem;">
+                            {% if object_list.first %}{{ object_list.first.name }}{% else %}-{% endif %}
+                        </h3>
+                    </div>
+                    <div class="stats-icon bg-info bg-opacity-10">
+                        <i class="bi bi-star text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="GET" action="{% url 'unit' %}">
+                <div class="input-group search-box">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="search_query" id="unitSearchInput" class="form-control border-start-0 ps-0"
+                        placeholder="Search units by name or code..." value="{{ request.GET.search_query }}"
+                        autocomplete="off">
+                    <button type="submit" hidden></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Units Table -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle unit-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Unit Name</th>
+                        <th>Short Code</th>
+                        <th>Products Using</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="unitTableBody">
+                    {% for unit in object_list %}
+                    <tr class="unit-row">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="unit-icon-small">
+                                    <i class="bi bi-rulers"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark">{{ unit.title }}</div>
+                                    <small class="text-muted">Measurement Unit</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="code-badge">{{ unit.name }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                <i class="bi bi-box me-1"></i>{{ unit.product_set.count }} products
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button class="btn btn-sm btn-light text-primary edit-unit-btn" title="Edit"
+                                    data-bs-toggle="modal" data-bs-target="#editUnitModal" data-unit-id="{{ unit.id }}"
+                                    data-unit-name="{{ unit.name }}" data-unit-title="{{ unit.title }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-light text-danger delete-unit-btn" title="Delete"
+                                    data-bs-toggle="modal" data-bs-target="#deleteUnitModal"
+                                    data-unit-id="{{ unit.id }}" data-unit-name="{{ unit.title }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="empty-state-inline">
+                                <i class="bi bi-rulers text-muted display-4"></i>
+                                <p class="mt-3 text-muted mb-3">No units found</p>
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#addUnitModal">
+                                    <i class="bi bi-plus-lg me-2"></i>Add Your First Unit
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Unit Modal -->
+<div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold">Add New Unit</h5>
+                    <p class="text-muted small mb-0">Create a new measurement unit</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{% url 'unit' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">
+                            <i class="bi bi-tag me-1"></i>Unit Name *
+                        </label>
+                        <input type="text" name="title" class="form-control form-control-lg" required
+                            placeholder="e.g., Kilogram, Liter, Piece">
+                        <small class="text-muted">Full name of the measurement unit</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">
+                            <i class="bi bi-code me-1"></i>Short Code *
+                        </label>
+                        <input type="text" name="name" class="form-control form-control-lg" required
+                            placeholder="e.g., kg, L, pcs">
+                        <small class="text-muted">Abbreviated code (2-4 characters)</small>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-2"></i>Create Unit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Unit Modal -->
+<div class="modal fade" id="editUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold">Edit Unit</h5>
+                    <p class="text-muted small mb-0">Update unit information</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{% url 'unit' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" id="editUnitId" name="unit_id">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">
+                            <i class="bi bi-tag me-1"></i>Unit Name *
+                        </label>
+                        <input type="text" id="editUnitTitle" name="title" class="form-control form-control-lg" required
+                            placeholder="e.g., Kilogram">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">
+                            <i class="bi bi-code me-1"></i>Short Code *
+                        </label>
+                        <input type="text" id="editUnitName" name="name" class="form-control form-control-lg" required
+                            placeholder="e.g., kg">
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-2"></i>Update Unit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Unit Modal -->
+<div class="modal fade" id="deleteUnitModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">Delete Unit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <i class="bi bi-exclamation-triangle-fill text-warning display-4"></i>
+                    <p class="mt-3 mb-0">Are you sure you want to delete the unit:</p>
+                    <p class="fw-bold fs-5" id="deleteUnitName"></p>
+                    <p class="text-muted small">This action cannot be undone.</p>
+                </div>
+                <form method="POST" action="{% url 'unit' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" id="deleteUnitId" name="unit_id">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-secondary flex-fill"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger flex-fill">
+                            <i class="bi bi-trash me-2"></i>Delete Unit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Search Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('unitSearchInput');
+        const unitRows = document.querySelectorAll('.unit-row');
+
+        if (searchInput && unitRows.length > 0) {
+            searchInput.addEventListener('keyup', function () {
+                const query = this.value.toLowerCase();
+
+                unitRows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    if (text.includes(query)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Edit unit modal handler
+        const editButtons = document.querySelectorAll('.edit-unit-btn');
+        editButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const unitId = this.dataset.unitId;
+                const unitName = this.dataset.unitName;
+                const unitTitle = this.dataset.unitTitle;
+
+                document.getElementById('editUnitId').value = unitId;
+                document.getElementById('editUnitName').value = unitName;
+                document.getElementById('editUnitTitle').value = unitTitle;
+            });
+        });
+
+        // Delete unit modal handler
+        const deleteButtons = document.querySelectorAll('.delete-unit-btn');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const unitId = this.dataset.unitId;
+                const unitName = this.dataset.unitName;
+
+                document.getElementById('deleteUnitId').value = unitId;
+                document.getElementById('deleteUnitName').textContent = unitName;
+            });
+        });
+    });
+</script>
+
+<!-- Custom Styles -->
+<style>
+    .stats-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        height: 100%;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .stats-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+    }
+
+    .search-box {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .search-box .input-group-text,
+    .search-box .form-control {
+        border: none;
+        background: transparent;
+    }
+
+    .search-box .form-control:focus {
+        box-shadow: none;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .unit-table thead th {
+        border-bottom: 2px solid #e2e8f0;
+        color: #4a5568;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        background-color: #f8f9fa !important;
+    }
+
+    .unit-table tbody td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+    }
+
+    .unit-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .unit-table tbody tr:hover {
+        background-color: #f8fafc;
+        transition: background-color 0.2s ease;
+    }
+
+    .unit-icon-small {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: white;
+        font-size: 1.1rem;
+    }
+
+    .code-badge {
+        display: inline-block;
+        padding: 0.35rem 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .empty-state-inline {
+        padding: 2rem;
+    }
+
+    .modal-content {
+        border-radius: 16px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 0.65rem 0.9rem;
+    }
+
+    .form-control-lg {
+        font-size: 1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .table-card {
+            padding: 1rem;
+        }
+
+        .unit-table thead th {
+            font-size: 0.7rem;
+            padding: 0.75rem 0.5rem;
+        }
+
+        .unit-table tbody td {
+            padding: 1rem 0.5rem;
+        }
+
+        .stats-card h3 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock maincontent %}

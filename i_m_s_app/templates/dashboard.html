@@ -1,0 +1,466 @@
+{% extends 'base/base.html' %}
+
+{% load static %}
+
+{% block maincontent %}
+<div class="container-fluid py-4">
+  <!-- Header Section -->
+  <div class="mb-4">
+    <h2 class="fw-bold text-dark mb-1">Dashboard Overview</h2>
+    <p class="text-muted mb-0">Welcome back! Here's what's happening with your inventory today.</p>
+  </div>
+
+  <!-- Main Stats Cards -->
+  <div class="row g-4 mb-4">
+    <!-- Total Products -->
+    <div class="col-md-6 col-lg-3">
+      <div class="stats-card-dash gradient-blue">
+        <div class="stats-icon-large">
+          <i class="bi bi-box-seam"></i>
+        </div>
+        <div class="stats-content">
+          <p class="stats-label">Total Products</p>
+          <h2 class="stats-value">{{ total_products }}</h2>
+          <small class="stats-badge"><i class="bi bi-graph-up me-1"></i>{{ total_categories }} Categories</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Vendors -->
+    <div class="col-md-6 col-lg-3">
+      <div class="stats-card-dash gradient-purple">
+        <div class="stats-icon-large">
+          <i class="bi bi-people"></i>
+        </div>
+        <div class="stats-content">
+          <p class="stats-label">Total Vendors</p>
+          <h2 class="stats-value">{{ total_vendors }}</h2>
+          <small class="stats-badge"><i class="bi bi-check-circle me-1"></i>{{ active_vendors }} Active</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Sales -->
+    <div class="col-md-6 col-lg-3">
+      <div class="stats-card-dash gradient-green">
+        <div class="stats-icon-large">
+          <i class="bi bi-currency-rupee"></i>
+        </div>
+        <div class="stats-content">
+          <p class="stats-label">Sales Revenue</p>
+          <h2 class="stats-value">₹{{ total_sales_revenue|floatformat:0 }}</h2>
+          <small class="stats-badge"><i class="bi bi-cart-check me-1"></i>{{ total_sales }} Orders</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock Value -->
+    <div class="col-md-6 col-lg-3">
+      <div class="stats-card-dash gradient-orange">
+        <div class="stats-icon-large">
+          <i class="bi bi-wallet2"></i>
+        </div>
+        <div class="stats-content">
+          <p class="stats-label">Stock Value</p>
+          <h2 class="stats-value">₹{{ total_stock_value|floatformat:0 }}</h2>
+          <small class="stats-badge"><i class="bi bi-box me-1"></i>In Inventory</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secondary Stats -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="info-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted mb-1 small text-uppercase fw-semibold">Purchases ({{ current_month_name }})</p>
+            <h4 class="fw-bold mb-0">{{ this_month_purchases }}</h4>
+            <small class="text-muted">₹{{ total_purchase_value|floatformat:0 }} total</small>
+          </div>
+          <div class="info-icon bg-primary bg-opacity-10">
+            <i class="bi bi-basket text-primary"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="info-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted mb-1 small text-uppercase fw-semibold">Sales ({{ current_month_name }})</p>
+            <h4 class="fw-bold mb-0">{{ this_month_sales }}</h4>
+            <small class="text-muted">{{ total_sales }} total sales</small>
+          </div>
+          <div class="info-icon bg-success bg-opacity-10">
+            <i class="bi bi-cart-check text-success"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="info-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted mb-1 small text-uppercase fw-semibold">Low Stock Alert</p>
+            <h4 class="fw-bold mb-0 text-warning">{{ low_stock_products }}</h4>
+            <small class="text-muted">Products below 10</small>
+          </div>
+          <div class="info-icon bg-warning bg-opacity-10">
+            <i class="bi bi-exclamation-triangle text-warning"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <div class="info-card">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <p class="text-muted mb-1 small text-uppercase fw-semibold">Customers</p>
+            <h4 class="fw-bold mb-0">{{ total_customers }}</h4>
+            <small class="text-muted">Registered buyers</small>
+          </div>
+          <div class="info-icon bg-info bg-opacity-10">
+            <i class="bi bi-person-badge text-info"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activities -->
+  <div class="row g-4">
+    <!-- Recent Purchases -->
+    <div class="col-lg-6">
+      <div class="activity-card">
+        <div class="activity-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-basket me-2 text-primary"></i>Recent Purchases</h5>
+          <a href="{% url 'purchase' %}" class="btn btn-sm btn-light">View All</a>
+        </div>
+        <div class="activity-body">
+          {% if recent_purchases %}
+          {% for purchase in recent_purchases %}
+          <div class="activity-item">
+            <div class="activity-icon bg-primary bg-opacity-10">
+              <i class="bi bi-box-seam text-primary"></i>
+            </div>
+            <div class="activity-details">
+              <div class="fw-semibold text-dark">{{ purchase.product.name }}</div>
+              <small class="text-muted">{{ purchase.vendor.name }} • Qty: {{ purchase.quantity }} •
+                ₹{{purchase.total_price }}</small>
+            </div>
+            <div class="activity-time">
+              <small class="text-muted">{{ purchase.purchase_date|date:"M d" }}</small>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+            No purchases yet
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Sales -->
+    <div class="col-lg-6">
+      <div class="activity-card">
+        <div class="activity-header">
+          <h5 class="fw-bold mb-0"><i class="bi bi-cart-check me-2 text-success"></i>Recent Sales</h5>
+          <a href="{% url 'sale' %}" class="btn btn-sm btn-light">View All</a>
+        </div>
+        <div class="activity-body">
+          {% if recent_sales %}
+          {% for sale in recent_sales %}
+          <div class="activity-item">
+            <div class="activity-icon bg-success bg-opacity-10">
+              <i class="bi bi-bag-check text-success"></i>
+            </div>
+            <div class="activity-details">
+              <div class="fw-semibold text-dark">{{ sale.product.name }}</div>
+              <small class="text-muted">
+                {% if sale.customer %}{{ sale.customer.name }}{% else %}Walk-in{% endif %}
+                • Qty: {{ sale.quantity }} • ₹{{ sale.total_price }}
+              </small>
+            </div>
+            <div class="activity-time">
+              <small class="text-muted">{{ sale.sale_date|date:"M d" }}</small>
+            </div>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-inbox display-4 d-block mb-2"></i>
+            No sales yet
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row g-4 mt-2">
+    <div class="col-12">
+      <div class="quick-actions-card">
+        <h5 class="fw-bold mb-3"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+        <div class="row g-3">
+          <div class="col-md-3 col-sm-6">
+            <a href="{% url 'sale' %}" class="quick-action-btn">
+              <i class="bi bi-plus-circle"></i>
+              <span>Record Sale</span>
+            </a>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <a href="{% url 'purchase' %}" class="quick-action-btn">
+              <i class="bi bi-cart-plus"></i>
+              <span>Add Purchase</span>
+            </a>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <a href="{% url 'product' %}" class="quick-action-btn">
+              <i class="bi bi-box-seam"></i>
+              <span>Add Product</span>
+            </a>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <a href="{% url 'vendor' %}" class="quick-action-btn">
+              <i class="bi bi-person-plus"></i>
+              <span>Add Vendor</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+  /* Main Stats Cards with Gradients */
+  .stats-card-dash {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .stats-card-dash::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    opacity: 0.1;
+    transition: all 0.3s ease;
+  }
+
+  .gradient-blue::before {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .gradient-purple::before {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+
+  .gradient-green::before {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  .gradient-orange::before {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  }
+
+  .stats-card-dash:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .stats-card-dash:hover::before {
+    transform: scale(1.2);
+  }
+
+  .stats-icon-large {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 3rem;
+    opacity: 0.15;
+  }
+
+  .stats-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .stats-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+  }
+
+  .stats-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+  }
+
+  .stats-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 20px;
+    color: #667eea;
+    font-weight: 600;
+  }
+
+  /* Info Cards */
+  .info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    height: 100%;
+  }
+
+  .info-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-4px);
+  }
+
+  .info-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  /* Activity Cards */
+  .activity-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .activity-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f1f3f5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .activity-body {
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 12px;
+    transition: background 0.2s ease;
+    margin-bottom: 0.5rem;
+  }
+
+  .activity-item:hover {
+    background: #f8f9fa;
+  }
+
+  .activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .activity-details {
+    flex: 1;
+  }
+
+  .activity-time {
+    flex-shrink: 0;
+  }
+
+  /* Quick Actions */
+  .quick-actions-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 16px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .quick-action-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+    color: white;
+  }
+
+  .quick-action-btn i {
+    font-size: 2rem;
+  }
+
+  .quick-action-btn span {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .stats-value {
+      font-size: 2rem;
+    }
+
+    .stats-icon-large {
+      font-size: 2rem;
+    }
+  }
+</style>
+{% endblock maincontent %}
