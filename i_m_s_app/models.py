@@ -76,7 +76,7 @@ class Product(models.Model):
     
     
 class Purchase(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     vendor = models.ForeignKey(Vendor, on_delete=models.PROTECT)
     quantity = models.DecimalField(max_digits=12, decimal_places=3)
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -118,7 +118,7 @@ class Customer(models.Model):
         return self.name
     
 class Sale(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, on_delete=models.PROTECT, blank=True, null=True)
     quantity = models.DecimalField(max_digits=12, decimal_places=3)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2) 
