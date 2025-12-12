@@ -203,14 +203,28 @@
                             <label class="form-label text-muted small fw-bold text-uppercase">
                                 <i class="bi bi-box-seam me-1"></i>Product *
                             </label>
-                            {{ form.product }}
+                            <select name="product" class="form-select" id="id_product" required>
+                                <option value="">Select a product</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" data-price="{{ p.selling_price }}">
+                                    {{ p.name }} (SKU: {{ p.sku }}) - Stock: {{ p.stock|floatformat:0 }}
+                                </option>
+                                {% endfor %}
+                            </select>
                             <small class="text-muted d-block mt-1">Available stock will be checked</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label text-muted small fw-bold text-uppercase">
                                 <i class="bi bi-person me-1"></i>Customer
                             </label>
-                            {{ form.customer }}
+                            <select name="customer" class="form-select" id="id_customer">
+                                <option value="">---------</option>
+                                {% for c in customers %}
+                                <option value="{{ c.id }}" data-phone="{{ c.phone|default:'' }}">
+                                    {{ c.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
                             <small class="text-muted d-block mt-1">Leave empty for walk-in customers</small>
                         </div>
                     </div>
@@ -255,8 +269,62 @@
 </div>
 
 <!-- Real-time Search Script -->
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Select2
+        // We use jQuery because Select2 is a jQuery plugin
+        $('#id_product').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#addSaleModal'),
+            placeholder: 'Select a product',
+            allowClear: true,
+            width: '100%'
+        });
+
+        // Custom matcher for searching by Name OR Phone
+        function matchCustom(params, data) {
+            // If there are no search terms, return all of the data
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+
+            // Do not display the item if there is no 'text' label
+            if (typeof data.text === 'undefined') {
+                return null;
+            }
+
+            // Search by Name
+            if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
+                return data;
+            }
+
+            // Search by Phone (using data-phone attribute)
+            var phone = $(data.element).data('phone');
+            if (phone && phone.toString().toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
+                return data;
+            }
+
+            // Return `null` if the term should not be displayed
+            return null;
+        }
+
+        $('#id_customer').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#addSaleModal'),
+            placeholder: 'Select or search customer',
+            allowClear: true,
+            width: '100%',
+            matcher: matchCustom
+        });
+
         const searchInput = document.getElementById('saleSearchInput');
         const saleRows = document.querySelectorAll('.sale-row');
 
@@ -292,6 +360,26 @@
             quantityInput.addEventListener('input', calculateTotal);
             priceInput.addEventListener('input', calculateTotal);
         }
+
+        // Auto-populate price on product selection
+        $('#id_product').on('select2:select', function (e) {
+            var data = e.params.data;
+            var element = $(data.element);
+            var price = element.data('price');
+
+            if (price) {
+                // Set the price input
+                priceInput.value = parseFloat(price).toFixed(2);
+                // Trigger calculation
+                calculateTotal();
+            }
+        });
+
+        // Also handle clearing selection
+        $('#id_product').on('select2:clear', function (e) {
+            priceInput.value = '';
+            calculateTotal();
+        });
     });
 </script>
 
