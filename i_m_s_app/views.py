@@ -31,7 +31,7 @@ class vendor_post_view(ListView):
         # Handle Edit
         if action == 'edit':
             vendor_id = request.POST.get('vendor_id')
-            try:
+            try:    
                 vendor = Vendor.objects.get(pk=vendor_id)
                 vendor.name = request.POST.get('name')
                 vendor.email = request.POST.get('email')
@@ -108,18 +108,50 @@ class product_post_view(ListView):
         return context
 
     def post(self, request, *args, **kwargs):
-        try:
-            name = request.POST.get('name')
-            sku = request.POST.get('sku')
-            category_id = request.POST.get('category')
-            unit_id = request.POST.get('unit')
-            purchase_price = request.POST.get('purchase_price')
-            selling_price = request.POST.get('selling_price')
-            stock = request.POST.get('stock')
-            is_active = request.POST.get('is_active') == 'on'
-            description = request.POST.get('description')
+        action=request.POST.get('action')
+        if action == 'edit':
+            product_id=request.POST.get('product_id')
+            try:
+                product=Product.objects.get(pk=product_id)
+                product.name=request.POST.get('name')
+                product.sku=request.POST.get('sku')
+                product.category_id=request.POST.get('category')
+                product.unit_id=request.POST.get('unit')
+                product.purchase_price=request.POST.get('purchase_price')
+                product.selling_price=request.POST.get('selling_price')
+                product.stock=request.POST.get('stock')
+                product.is_active=request.POST.get('is_active')=='on'
+                product.description=request.POST.get('description')
+                product.save()
+                messages.success(request,"Product updated successfully!")
+            except Product.DoesNotExist:
+                messages.error(request,"Product not found!")
+            except Exception as e:
+                messages.error(request,f"Error updating product: {e}")
+        elif action == 'delete':
+            product_id=request.POST.get('product_id')
+            try:
+                product=Product.objects.get(pk=product_id)
+                product_name=product.name
+                product.delete()
+                messages.success(request,f"Product '{product_name}' deleted successfully!")
+            except Product.DoesNotExist:
+                messages.error(request,"Product not found!")
+            except Exception as e:
+                messages.error(request,f"Error deleting product: {e}")
+        else:
+            try:
+                name = request.POST.get('name')
+                sku = request.POST.get('sku')
+                category_id = request.POST.get('category')
+                unit_id = request.POST.get('unit')
+                purchase_price = request.POST.get('purchase_price')
+                selling_price = request.POST.get('selling_price')
+                stock = request.POST.get('stock')
+                is_active = request.POST.get('is_active') == 'on'
+                description = request.POST.get('description')
             
-            product = Product(
+                product = Product(
                 name=name,
                 sku=sku,
                 category_id=category_id,
@@ -129,11 +161,11 @@ class product_post_view(ListView):
                 stock=stock,
                 is_active=is_active,
                 description=description
-            )
-            product.save()
-            messages.success(request, "Product added successfully!")
-        except Exception as e:
-             messages.error(request, f"Error adding product: {e}")
+                )
+                product.save()
+                messages.success(request, "Product added successfully!")
+            except Exception as e:
+                messages.error(request, f"Error adding product: {e}")
              
         return redirect('product')
 
